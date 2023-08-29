@@ -34,7 +34,7 @@ async function getTestResponse(req, res, next) {
         // res.json(JSON.parse(testResponse));
 
         // Send the OpenAI response as the JSON response
-        res.json(data);
+       res.json(data);
     } catch (error) {
         console.error(error);
         res.status(500).send('An error occurred while processing the image.');
@@ -80,12 +80,39 @@ async function upload(req, res, next) {
 }
 
 // Function to extract all text from the document and return it as a text blob
+// Omit the values that were extracted from the table
 function extractText(document) {
     // Get the text blocks
-    const textBlocks = document.Blocks;
+    const textBlocks = document.Blocks.filter(block => block.BlockType != 'LINE');
+
+    // Get the table
+    const table = document.Blocks.find(block => block.BlockType === 'TABLE');
+
+    // Get the list of IDs in the table
+    const tableIds = table.Relationships.find(r => r.Type === 'CHILD').Ids;
+
+    // Get the child IDs for each table child
+    const tableChildIds = tableIds.map(id => {
+        const block = document.Blocks.find(b => b.Id === id);
+
+        if(typeof(block) != 'undefined' && typeof(block.Relationships) != 'undefined') {
+        return block.Relationships.find(r => r.Type === 'CHILD').Ids;
+        }
+    });
+
+
+    // Convert the IDs to an array
+    const tableIdArray = Array.isArray(tableChildIds) ? tableChildIds : [tableChildIds];
+    const flatIds = tableIdArray.flat();
+
+    // Log the list of IDs
+    console.log('Table IDs:', flatIds);
+    
+    // Remove the table blocks from the text blocks
+    const filteredTextBlocks = textBlocks.filter(block => !flatIds.includes(block.Id));
 
     // Extract the text from each block
-    const textBlob = textBlocks.map(block => block.Text).join(' ');
+    const textBlob = filteredTextBlocks.map(block => block.Text).join(' ');
 
     return textBlob;
 }
@@ -129,13 +156,13 @@ function extractTableRows(document) {
             const cellBlock = document.Blocks.find(b => b.Id === cellBlockId);
 
             if (typeof (cellBlock) === 'undefined') {
-                console.log('Cell is undefined');
+                //console.log('Cell is undefined');
                 rowValues.push(' ');
                 continue;
             }
 
             if (typeof (cellBlock.Relationships) === 'undefined') {
-                console.log('Cell relationships are undefined');
+                //console.log('Cell relationships are undefined');
                 continue;
             }
 
