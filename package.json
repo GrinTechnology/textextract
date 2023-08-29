@@ -1,5 +1,5 @@
 {
-  "name": "aws-textextract-tables",
+  "name": "textextract",
   "version": "1.0.0",
   "description": "A server application that uses AWS's Textextract to extract tables from images.",
   "main": "server.js",
@@ -8,7 +8,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/yourusername/aws-textextract-tables.git"
+    "url": "git+https://github.com/jtmuller5/textextract.git"
   },
   "keywords": [
     "AWS",
@@ -16,12 +16,12 @@
     "Node.js",
     "Server"
   ],
-  "author": "Your Name",
+  "author": "Joseph Muller",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/yourusername/aws-textextract-tables/issues"
+    "url": "https://github.com/jtmuller5/textextract/issues"
   },
-  "homepage": "https://github.com/yourusername/aws-textextract-tables#readme",
+  "homepage": "https://github.com/jtmuller5/textextract#readme",
   "dependencies": {
     "aws-sdk": "^2.1031.0",
     "dotenv": "^10.0.0",
