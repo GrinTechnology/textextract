@@ -11,6 +11,6 @@ const upload = multer({
 router.post('/test', extractionController.getTestResponse);
 
 // Route to handle file upload
-router.post('/upload', upload.single('image'),  extractionController.getTestResponse);
+router.post('/upload', upload.single('image'),  extractionController.upload);
 
 module.exports = router;

@@ -61,8 +61,12 @@ async function upload(req, res, next) {
             console.log('Table Rows:', tableRows);
             console.log('Text:', text);
 
+            let prompt = createPrompt(text, tableRows.join('\n'));
+            let data = await makeCompletionsRequest(prompt);
+
+
             // Send the response
-            res.json(document);
+            res.json(data);
         }
     } catch (error) {
         console.error(error);
@@ -196,7 +200,14 @@ async function makeCompletionsRequest(prompt) {
         const data = response.data;
 
         console.log(data);
-        return data;
+
+        console.log(data);
+
+        const firstMessageContent = data.choices[0].message.content;
+        console.log(firstMessageContent);
+
+         // return data; // Returns the raw OpenAI response
+         return JSON.parse(firstMessageContent);
 
     } catch (error) {
         console.error(error);
@@ -228,20 +239,20 @@ function createPrompt(fullText, table) {
     {
     "code": "D1110",
     "description": "Cleaning - adult",
-    "full_fee": 100.00,
-    "plan_fee": 80
+     "full_fee": "100.00",
+    "plan_fee": "80"
     },
     {
     "code": "D1206",
     "description": "Topical fluoride varnish",
-    "full_fee": 100.00,
-    "plan_fee": 80
+    "full_fee": "100.00",
+    "plan_fee": "80"
     },
     {
     "code": "D1351",
     "description": "Sealant - per tooth",
-    "full_fee": 100.00,
-    "plan_fee": 80
+    "full_fee": "100.00",
+    "plan_fee": "80"
     }
     ]
     }
