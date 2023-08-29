@@ -45,6 +45,49 @@ To start the server, run the following command:
 npm start
 ```
 
+## Prompt
+```agsl
+Return the user name, dental office, and the 4-digit dental codes with descriptions and insurance fees in this text from a treatment plan:
+
+Full Text:
+
+“{{ text }}”
+
+Treatment Plan Table:
+
+“{{ table }}”
+
+Use this as a template and only include words from the provided text:
+
+{
+"patient": "test name",
+"dental_office": "test office",
+"service_summary": "test summary",
+"cdt_codes": [
+{
+"code": "D1110",
+"description": "Cleaning - adult",
+"full_fee": 100.00,
+"plan_fee": 80
+},
+{
+"code": "D1206",
+"description": "Topical fluoride varnish",
+"full_fee": 100.00,
+"plan_fee": 80
+},
+{
+"code": "D1351",
+"description": "Sealant - per tooth",
+"full_fee": 100.00,
+"plan_fee": 80
+}
+]
+}
+```
+
+Prompts can be tested in [MakerSuite](https://makersuite.google.com/app/prompts/new_text) or in [OpenAI's Playground](https://platform.openai.com/playground).
+
 ## Built With
 
 * [Node.js](https://nodejs.org/)
