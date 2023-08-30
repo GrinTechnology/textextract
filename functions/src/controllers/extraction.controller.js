@@ -32,7 +32,7 @@ async function getTestResponse(req, res, next) {
         // res.json(JSON.parse(testResponse));
 
         // Send the OpenAI response as the JSON response
-       res.json(data);
+        res.json(data);
     } catch (error) {
         console.error(error);
         res.status(500).send('An error occurred while processing the image.');
@@ -43,9 +43,23 @@ async function getTestResponse(req, res, next) {
 async function upload(req, res, next) {
     try {
 
-        if (typeof req.file != 'undefined') {
+        const {
+            fieldname,
+            originalname,
+            encoding,
+            mimetype,
+            buffer,
+        } = req.files[0]
+
+        console.log('fieldname:', fieldname);
+        console.log('originalname:', originalname);
+        console.log('encoding:', encoding);
+        console.log('mimetype:', mimetype);
+        console.log('buffer:', buffer);
+
+        if (typeof req.files[0] != 'undefined') {
             // Read the file from the file system
-            const image = fs.readFileSync(req.file.path);
+            const image = buffer; //fs.readFileSync(req.file.path);
 
             // Extract text from the image
             const document = await extractTextFromImage(image);
@@ -93,8 +107,8 @@ function extractText(document) {
     const tableChildIds = tableIds.map(id => {
         const block = document.Blocks.find(b => b.Id === id);
 
-        if(typeof(block) != 'undefined' && typeof(block.Relationships) != 'undefined') {
-        return block.Relationships.find(r => r.Type === 'CHILD').Ids;
+        if (typeof (block) != 'undefined' && typeof (block.Relationships) != 'undefined') {
+            return block.Relationships.find(r => r.Type === 'CHILD').Ids;
         }
     });
 
@@ -105,7 +119,7 @@ function extractText(document) {
 
     // Log the list of IDs
     console.log('Table IDs:', flatIds);
-    
+
     // Remove the table blocks from the text blocks
     const filteredTextBlocks = textBlocks.filter(block => !flatIds.includes(block.Id));
 
@@ -231,8 +245,8 @@ async function makeCompletionsRequest(prompt) {
         const firstMessageContent = data.choices[0].message.content;
         console.log(firstMessageContent);
 
-         // return data; // Returns the raw OpenAI response
-         return JSON.parse(firstMessageContent);
+        // return data; // Returns the raw OpenAI response
+        return JSON.parse(firstMessageContent);
 
     } catch (error) {
         console.error(error);
