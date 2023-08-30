@@ -2,11 +2,13 @@
 
 const functions = require('firebase-functions');
 const express = require('express');
+const cors = require("cors")
 const extractionRouter = require('./src/routes/extraction.route');
 
 // Create a new Express application
 const app = express();
 
+app.use(cors({ origin: true }))
 app.use('/', extractionRouter);
 
 // Start the server

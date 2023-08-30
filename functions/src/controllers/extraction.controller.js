@@ -1,6 +1,7 @@
 const fs = require('fs');
 const extractTextFromImage = require('../utils/text-extract');
 const { default: axios } = require('axios');
+const { onRequest } = require("firebase-functions/v2/https");
 
 async function getTestResponse(req, res, next) {
     try {
