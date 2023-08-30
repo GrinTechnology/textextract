@@ -1,8 +1,6 @@
 const fs = require('fs');
 const extractTextFromImage = require('../utils/text-extract');
-const https = require("https");
-const querystring = require('querystring');
-const axios = require('axios');
+const { default: axios } = require('axios');
 
 async function getTestResponse(req, res, next) {
     try {

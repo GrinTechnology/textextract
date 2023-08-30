@@ -1,5 +1,5 @@
 // Import AWS SDK
-const AWS = require('../../aws-config');
+const AWS = require('../configs/aws-config');
 
 // Create a new instance of Textract
 const textract = new AWS.Textract();
