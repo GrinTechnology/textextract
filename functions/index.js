@@ -2,13 +2,14 @@
 
 const functions = require('firebase-functions');
 const express = require('express');
-const cors = require("cors")
 const extractionRouter = require('./src/routes/extraction.route');
+const cors = require("cors")
+const { onRequest } = require("firebase-functions/v2/https");
 
 // Create a new Express application
 const app = express();
 
-app.use(cors({ origin: true }))
+app.use(cors());
 app.use('/', extractionRouter);
 
 // Start the server
@@ -18,4 +19,7 @@ app.listen(port, () => {
   console.log(`Server is running on port ${port}`);
 });
 
-exports.app = functions.https.onRequest(app);
+exports.app = onRequest(
+  { cors: true},
+  app
+);
