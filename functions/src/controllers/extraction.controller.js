@@ -27,11 +27,13 @@ async function getTestResponse(req, res, next) {
         console.log('Table Rows:', tableText);
         console.log('Text:', text);
 
-        //let prompt = createPrompt(text, tableText);
-        //let data = await makeCompletionsRequest(prompt);
+        let useGpt4 = req.query.useGpt4 == 'true';
+
+        //let prompt = createPrompt(text, tableText, '');
+        //let data = await makeCompletionsRequest(prompt, useGpt4);
 
         // Send the test response as the JSON response
-         res.json(JSON.parse(testResponse));
+        res.json(JSON.parse(testResponse));
 
         // Send the OpenAI response as the JSON response
         // res.json(data);
@@ -60,9 +62,21 @@ async function upload(req, res, next) {
         console.log('mimetype:', mimetype);
         console.log('buffer:', buffer);
 
+        let useGpt4 = req.query.useGpt4 == 'true';
+
         if (typeof req.files[0] != 'undefined') {
             // Read the file from the file system
             const image = buffer; //fs.readFileSync(req.file.path);
+
+            // Write to temp file
+            /* const path = temporaryFile({extension: 'pdf'});
+            let tempFile = await temporaryWrite(path, image);
+           
+            var pdfImage = new PDFImage(path,{
+                combinedImage: true
+            });
+
+            let combinedImage = await pdfImage.convertFile(); */
 
             // Extract text from the image
             const document = await extractTextFromImage(image);
@@ -76,8 +90,8 @@ async function upload(req, res, next) {
             console.log('Table Rows:', tableText);
             console.log('Text:', text);
 
-            let prompt = createPrompt(text, tableText);
-            let data = await makeCompletionsRequest(prompt);
+            let prompt = createPrompt(text, tableText, originalname);
+            let data = await makeCompletionsRequest(prompt, useGpt4);
 
 
             // Send the response with {'Access-Control-Allow-Origin': '*'} to allow CORS
@@ -142,12 +156,12 @@ async function getTextractResults(req, res, next) {
     }
 }
 
-async function makeCompletionsRequest(prompt) {
+async function makeCompletionsRequest(prompt, useGpt4 = false) {
     try {
         let OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 
         const postData = JSON.stringify({
-            model: 'gpt-3.5-turbo',
+            model: useGpt4 ? 'gpt-4' : 'gpt-3.5-turbo',
             messages: [{
                 "role": "user",
                 "content": prompt
@@ -173,7 +187,8 @@ async function makeCompletionsRequest(prompt) {
         console.log(firstMessageContent);
 
         // return data; // Returns the raw OpenAI response
-        return JSON.parse(firstMessageContent);
+        // Start at the first { and end at the last }
+        return JSON.parse(firstMessageContent.substring(firstMessageContent.indexOf('{'), firstMessageContent.lastIndexOf('}') + 1));
 
     } catch (error) {
         console.error(error);
@@ -182,10 +197,14 @@ async function makeCompletionsRequest(prompt) {
 
 // Function to create a prompt for extracting information from a treatment plan
 // This function takes in the full text and table of a treatment plan and creates a prompt
-function createPrompt(fullText, table) {
+function createPrompt(fullText, table, fileName) {
 
     let template = `
     Return the user name, dental office, and the 4-digit dental codes with descriptions and insurance fees in this text from a treatment plan:
+
+    File Name:
+
+    “{{ fileName }}”
 
     Full Text:
     
@@ -195,7 +214,7 @@ function createPrompt(fullText, table) {
     
     “{{ table }}”
     
-    Use this as a template and only include words from the provided text:
+    Use this as a template:
     
     {
     "patient": "test name",
@@ -222,12 +241,12 @@ function createPrompt(fullText, table) {
     }
     ]
     }
+
+    Be concise.
 `.replace('{{ text }}', fullText).replace('{{ table }}', table);
 
     return template;
 }
-
-
 
 // Export the functions
 module.exports = {
@@ -235,3 +254,4 @@ module.exports = {
     getTextractResults,
     upload
 };
+

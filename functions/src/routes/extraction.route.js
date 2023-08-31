@@ -12,7 +12,6 @@ const cors = require("cors")
 
 router.use(fileParser);
 router.use(cors());
-
 router.post('/test', extractionController.getTestResponse);
 
 router.post('/extract', extractionController.getTextractResults);

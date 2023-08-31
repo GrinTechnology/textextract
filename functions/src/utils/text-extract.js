@@ -49,7 +49,7 @@ function extractText(document) {
   const flatIds = tableIdArray.flat();
 
   // Log the list of IDs
-  console.log('Table IDs:', flatIds);
+  // console.log('Table IDs:', flatIds);
 
   // Remove the table blocks from the text blocks
   const filteredTextBlocks = textBlocks.filter(block => !flatIds.includes(block.Id));
