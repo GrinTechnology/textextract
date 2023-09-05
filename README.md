@@ -99,10 +99,6 @@ Prompts can be tested in [MakerSuite](https://makersuite.google.com/app/prompts/
 * **Joseph Muller**
 
 
-## License
-
-This project is licensed under the ISC License.
-
 ## Acknowledgments
 
 * AWS TextExtract for providing the service to extract tables from images.
