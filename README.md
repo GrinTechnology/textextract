@@ -48,6 +48,17 @@ To start the server, run the following command:
 npm start
 ```
 
+To start the Firebase Emulators, navigate into the `functions` folder and run the following command:
+```
+firebase emulators:start
+```
+
+## Deploy the function
+
+```
+firebase deploy --only functions
+```
+
 ## Prompt
 ```agsl
 Return the user name, dental office, and the 4-digit dental codes with descriptions and insurance fees in this text from a treatment plan:
