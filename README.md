@@ -27,7 +27,10 @@ git clone https://github.com/yourusername/aws-textextract-tables.git
 npm install
 ```
 
-3. Create a .env file in the root directory of the project and insert your credentials.
+3. Install GraphicsMagick
+https://github.com/yakovmeister/pdf2image/blob/HEAD/docs/gm-installation.md
+
+4. Create a .env file in the root directory of the project and insert your credentials.
 ```
 # AWS Configuration
 AWS_ACCESS_KEY_ID=your_access_key_id

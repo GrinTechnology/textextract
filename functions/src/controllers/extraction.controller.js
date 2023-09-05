@@ -1,7 +1,7 @@
 const fs = require('fs');
 const { extractTextFromImage, extractTableRows, extractText } = require('../utils/text-extract');
 const { default: axios } = require('axios');
-const { onRequest } = require("firebase-functions/v2/https");
+const { fromBuffer } = require('pdf2pic');
 
 // Return a test response without using Textract or OpenAI
 async function getTestResponse(req, res, next) {
@@ -47,7 +47,6 @@ async function getTestResponse(req, res, next) {
 // Function to upload a file and extract text from it using Textract and OpenAI
 async function upload(req, res, next) {
     try {
-
         const {
             fieldname,
             originalname,
@@ -68,18 +67,23 @@ async function upload(req, res, next) {
             // Read the file from the file system
             const image = buffer; //fs.readFileSync(req.file.path);
 
-            // Write to temp file
-            /* const path = temporaryFile({extension: 'pdf'});
-            let tempFile = await temporaryWrite(path, image);
-           
-            var pdfImage = new PDFImage(path,{
-                combinedImage: true
-            });
+            const options = {
+                density: 100,
+                format: "png",
+                width: 600,
+                height: 600
+            };
 
-            let combinedImage = await pdfImage.convertFile(); */
+            console.log(typeof image);
 
+            // Convert PDF buffer to PNG buffer
+            const convert = fromBuffer(image, options);
+            const img = await convert(1, {responseType: 'buffer'});
+
+            console.log(typeof img.buffer);
+            
             // Extract text from the image
-            const document = await extractTextFromImage(image);
+            const document = await extractTextFromImage(img.buffer);
 
             // Get the table rows
             const tableText = extractTableRows(document);
