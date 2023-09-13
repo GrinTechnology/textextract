@@ -337,7 +337,7 @@ function createPrompt(fullText, table, fileName) {
     }
 
     Be concise.
-`.replace('{{ text }}', fullText).replace('{{ table }}', table);
+`.replace('{{ text }}', fullText).replace('{{ table }}', table).replace('{{ fileName }}', fileName);
 
     return template;
 }
