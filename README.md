@@ -56,7 +56,7 @@ firebase emulators:start
 ## Deploy the function
 
 ```
-firebase deploy --only functions
+firebase deploy --only functions:app
 ```
 
 ## Prompt

@@ -20,5 +20,7 @@ router.post('/extract', extractionController.getTextractResults);
 //router.post('/upload', upload.single('image'),  extractionController.upload);
 router.post('/upload', extractionController.upload);
 
+router.post('/upload-pdf', extractionController.uploadPdf);
+
 
 module.exports = router;

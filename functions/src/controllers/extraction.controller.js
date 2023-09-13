@@ -1,7 +1,8 @@
 const fs = require('fs');
 const { extractTextFromImage, extractTableRows, extractText } = require('../utils/text-extract');
 const { default: axios } = require('axios');
-const { fromBuffer } = require('pdf2pic');
+const path = require('path');
+const PDFDocument = require('pdf-lib').PDFDocument;
 
 // Return a test response without using Textract or OpenAI
 async function getTestResponse(req, res, next) {
@@ -64,26 +65,22 @@ async function upload(req, res, next) {
         let useGpt4 = req.query.useGpt4 == 'true';
 
         if (typeof req.files[0] != 'undefined') {
-            // Read the file from the file system
-            const image = buffer; //fs.readFileSync(req.file.path);
 
-            const options = {
-                density: 100,
-                format: "png",
-                width: 600,
-                height: 600
-            };
-
-            console.log(typeof image);
-
-            // Convert PDF buffer to PNG buffer
-            const convert = fromBuffer(image, options);
-            const img = await convert(1, {responseType: 'buffer'});
-
-            console.log(typeof img.buffer);
-            
             // Extract text from the image
-            const document = await extractTextFromImage(img.buffer);
+            const document = await extractTextFromImage(buffer); // img.buffer
+
+            if (document == null) {
+                res.status(500).send('An error occurred while processing the image.');
+                return;
+            }
+
+            console.log('Data: ' + document?.$response.data);
+            console.log('Error: ' + document?.$response.error);
+
+            if (document?.$response.error) {
+                res.status(500).send('An error occurred while processing the image: ' + document?.$response.error?.message);
+                return;
+            }
 
             // Get the table rows
             const tableText = extractTableRows(document);
@@ -97,14 +94,107 @@ async function upload(req, res, next) {
             let prompt = createPrompt(text, tableText, originalname);
             let data = await makeCompletionsRequest(prompt, useGpt4);
 
-
             // Send the response with {'Access-Control-Allow-Origin': '*'} to allow CORS
             res.set('Access-Control-Allow-Origin', '*');
             res.json(data);
         }
     } catch (error) {
         console.error(error);
-        res.status(500).send('An error occurred while processing the image.');
+        res.status(500).send('error in upload: ' + error.message);
+    } finally {
+        if (typeof req.file != 'undefined') {
+            // Delete the uploaded file
+            fs.unlinkSync(req.file.path);
+        }
+    }
+}
+
+async function uploadPdf(req, res, next) {
+    try {
+        const {
+            fieldname,
+            originalname,
+            encoding,
+            mimetype,
+            buffer,
+        } = req.files[0]
+
+        console.log('fieldname:', fieldname);
+        console.log('originalname:', originalname);
+        console.log('encoding:', encoding);
+        console.log('mimetype:', mimetype);
+        console.log('buffer:', buffer);
+
+        let useGpt4 = req.query.useGpt4 == 'true';
+
+        if (typeof req.files[0] != 'undefined') {
+
+            await fs.writeFile(originalname, buffer, function (err) { })
+
+            const docmentAsBytes = await fs.promises.readFile(originalname);
+
+            const pdfDoc = await PDFDocument.load(docmentAsBytes);
+
+            console.log('PDF Document:', pdfDoc);
+
+            const numberOfPages = pdfDoc.getPages().length;
+
+            console.log('Number of Pages:', numberOfPages);
+
+            let allTableText = '';
+            let allText = '';
+
+            for (let i = 0; i < numberOfPages; i++) {
+
+                // Create a new "sub" document
+                const subDocument = await PDFDocument.create();
+                // copy the page at current index
+                const [copiedPage] = await subDocument.copyPages(pdfDoc, [i])
+                subDocument.addPage(copiedPage);
+                const pdfBytes = await subDocument.save()
+                const document = await extractTextFromImage(pdfBytes); // img.buffer
+
+                if (document == null) {
+                    await fs.unlink(originalname, function (err) { });
+                    res.status(500).send('An error occurred while processing the image.');
+                    return;
+                }
+
+                console.log('Data: ' + document?.$response.data);
+                console.log('Error: ' + document?.$response.error);
+
+                if (document?.$response.error) {
+                    await fs.unlink(originalname, function (err) { });
+                    res.status(500).send('An error occurred while processing the image: ' + document?.$response.error?.message);
+                    return;
+                }
+
+                // Get the table rows
+                const tableText = extractTableRows(document);
+
+                // Get all text
+                const text = extractText(document);
+
+                console.log('Table Rows:', tableText);
+                console.log('Text:', text);
+
+                allTableText += tableText;
+
+                allText += text;
+            }
+            // Extract text from the image
+
+            let prompt = createPrompt(allText, allTableText, originalname);
+            let data = await makeCompletionsRequest(prompt, useGpt4);
+
+            await fs.unlink(originalname, function (err) { });
+            // Send the response with {'Access-Control-Allow-Origin': '*'} to allow CORS
+            res.set('Access-Control-Allow-Origin', '*');
+            res.json(data);
+        }
+    } catch (error) {
+        console.error(error);
+        res.status(500).send('error in upload: ' + error.message);
     } finally {
         if (typeof req.file != 'undefined') {
             // Delete the uploaded file
@@ -256,6 +346,7 @@ function createPrompt(fullText, table, fileName) {
 module.exports = {
     getTestResponse,
     getTextractResults,
-    upload
+    upload,
+    uploadPdf
 };
 

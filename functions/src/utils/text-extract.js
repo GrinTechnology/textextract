@@ -15,9 +15,11 @@ const extractTextFromImage = async (image) => {
 
   try {
     const response = await textract.analyzeDocument(params).promise();
+    // Print the result
+    console.log('Textract response: ' + response);
     return response;
   } catch (error) {
-    console.error(error);
+    console.error('error in extractTextFromImage: ' + error.message);
     return null;
   }
 };
@@ -32,32 +34,39 @@ function extractText(document) {
   const table = document.Blocks.find(block => block.BlockType === 'TABLE');
 
   // Get the list of IDs in the table
-  const tableIds = table.Relationships.find(r => r.Type === 'CHILD').Ids;
-
-  // Get the child IDs for each table child
-  const tableChildIds = tableIds.map(id => {
-    const block = document.Blocks.find(b => b.Id === id);
-
-    if (typeof (block) != 'undefined' && typeof (block.Relationships) != 'undefined') {
-      return block.Relationships.find(r => r.Type === 'CHILD').Ids;
-    }
-  });
+  // only do this if Relationships exists
+  if (typeof (table.Relationships) === 'undefined') {
+    return '';
+  } else {
+    const tableIds = table.Relationships.find(r => r.Type === 'CHILD').Ids;
 
 
-  // Convert the IDs to an array
-  const tableIdArray = Array.isArray(tableChildIds) ? tableChildIds : [tableChildIds];
-  const flatIds = tableIdArray.flat();
+    // Get the child IDs for each table child
+    const tableChildIds = tableIds.map(id => {
+      const block = document.Blocks.find(b => b.Id === id);
 
-  // Log the list of IDs
-  // console.log('Table IDs:', flatIds);
+      if (typeof (block) != 'undefined' && typeof (block.Relationships) != 'undefined') {
+        return block.Relationships.find(r => r.Type === 'CHILD').Ids;
+      }
+    });
 
-  // Remove the table blocks from the text blocks
-  const filteredTextBlocks = textBlocks.filter(block => !flatIds.includes(block.Id));
 
-  // Extract the text from each block
-  const textBlob = filteredTextBlocks.map(block => block.Text).join(' ');
+    // Convert the IDs to an array
+    const tableIdArray = Array.isArray(tableChildIds) ? tableChildIds : [tableChildIds];
+    const flatIds = tableIdArray.flat();
 
-  return textBlob;
+
+    // Log the list of IDs
+    // console.log('Table IDs:', flatIds);
+
+    // Remove the table blocks from the text blocks
+    const filteredTextBlocks = textBlocks.filter(block => !flatIds.includes(block.Id));
+
+    // Extract the text from each block
+    const textBlob = filteredTextBlocks.map(block => block.Text).join(' ');
+
+    return textBlob;
+  }
 }
 
 
