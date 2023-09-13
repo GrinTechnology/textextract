@@ -19,7 +19,12 @@ app.listen(port, () => {
   console.log(`Server is running on port ${port}`);
 });
 
+// Extracting multiple pdf pages and running the text through GPT-4 takes some time
+// https://firebase.google.com/docs/functions/manage-functions?gen=2nd#set_timeout_and_memory_allocation
 exports.app = onRequest(
-  { cors: true},
+  {
+    cors: true,
+    timeoutSeconds: 300,
+  },
   app
 );

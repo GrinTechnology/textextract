@@ -319,19 +319,36 @@ function createPrompt(fullText, table, fileName) {
     "code": "D1110",
     "description": "Cleaning - adult",
      "full_fee": "100.00",
-    "plan_fee": "80"
+    "plan_fee": "80",
+    "date": "10/10/2021",
+    "visit": "1",
+    "tooth": "1"
     },
     {
     "code": "D1206",
     "description": "Topical fluoride varnish",
     "full_fee": "100.00",
-    "plan_fee": "80"
+    "plan_fee": "80",
+    "date": "10/10/2021",
+    "visit": "1",
+    "tooth": "2"
+    },
+    "code": "D1206",
+    "description": "Topical fluoride varnish",
+    "full_fee": "100.00",
+    "plan_fee": "80",
+    "date": "10/11/2021",
+    "visit": "2",
+    "tooth": "2"
     },
     {
     "code": "D1351",
     "description": "Sealant - per tooth",
     "full_fee": "100.00",
-    "plan_fee": "80"
+    "plan_fee": "80",
+    "date": "10/11/2021",
+    "visit": "2",
+    "tooth": ""
     }
     ]
     }
