@@ -170,10 +170,10 @@ function extractTableRows(document) {
   });
 
   // Convert the fullTables map to a structured string
-  const structuredString = JSON.stringify([...fullTables]);
+  // const structuredString = JSON.stringify([...fullTables]);
 
   // Return the structured string
-  return structuredString;
+  return fullTables;
 
 }
 

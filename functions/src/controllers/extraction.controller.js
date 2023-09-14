@@ -141,6 +141,7 @@ async function uploadPdf(req, res, next) {
 
             console.log('Number of Pages:', numberOfPages);
 
+            let allTables = new Map();
             let allTableText = '';
             let allText = '';
 
@@ -170,21 +171,30 @@ async function uploadPdf(req, res, next) {
                 }
 
                 // Get the table rows
-                const tableText = extractTableRows(document);
+                const tableMap = extractTableRows(document);
 
                 // Get all text
                 const text = extractText(document);
 
-                console.log('Table Rows:', tableText);
+                console.log('Table Map:', tableMap);
                 console.log('Text:', text);
 
-                allTableText += tableText;
+                // Merge the tables
+                allTables = new Map([...allTables, ...tableMap]);
+                allTableText += tableMap;
 
-                allText += text;
+                // If all text has not been set, set it
+                if (allText == '') {
+
+                    allText = text;
+                }
             }
             // Extract text from the image
+            allTables = new Map([...allTables]);
 
-            let prompt = createPrompt(allText, allTableText, originalname);
+            console.log('All Tables:', JSON.stringify(Array.from([...allTables.values()]).flat()));
+
+            let prompt = createPrompt(allText, JSON.stringify([...allTables]), originalname);
             let data = await makeCompletionsRequest(prompt, useGpt4);
 
             await fs.unlink(originalname, function (err) { });
