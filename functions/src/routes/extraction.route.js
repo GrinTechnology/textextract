@@ -12,15 +12,16 @@ const cors = require("cors")
 
 router.use(fileParser);
 router.use(cors());
+
 router.post('/test', extractionController.getTestResponse);
 
 router.post('/extract', extractionController.getTextractResults);
 
-// Route to handle file upload
-//router.post('/upload', upload.single('image'),  extractionController.upload);
-router.post('/upload', extractionController.upload);
+// deprecated
+router.post('/upload-pdf', extractionController.getCdtCodes);
 
-router.post('/upload-pdf', extractionController.uploadPdf);
+router.post('/codes', extractionController.getCdtCodes);
 
+router.post('/details', extractionController.getPlanDetails);
 
 module.exports = router;

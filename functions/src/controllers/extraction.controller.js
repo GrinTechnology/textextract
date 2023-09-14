@@ -1,5 +1,6 @@
 const fs = require('fs');
 const { extractTextFromImage, extractTableRows, extractText } = require('../utils/text-extract');
+const { getAllTables, getAllText, getTablesFromBytes, getTextFromBytes } = require('../utils/prompt-maker');
 const { default: axios } = require('axios');
 const path = require('path');
 const PDFDocument = require('pdf-lib').PDFDocument;
@@ -45,8 +46,14 @@ async function getTestResponse(req, res, next) {
     }
 }
 
-// Function to upload a file and extract text from it using Textract and OpenAI
-async function upload(req, res, next) {
+/**
+ * Get the patient and dentist names from a treatment plan
+ * @param {*} req 
+ * @param {*} res 
+ * @param {*} next 
+ * @returns 
+ */
+async function getPlanDetails(req, res, next) {
     try {
         const {
             fieldname,
@@ -66,37 +73,33 @@ async function upload(req, res, next) {
 
         if (typeof req.files[0] != 'undefined') {
 
-            // Extract text from the image
-            const document = await extractTextFromImage(buffer); // img.buffer
+            try {
+                await fs.writeFile(originalname, buffer, function (err) { })
 
-            if (document == null) {
-                res.status(500).send('An error occurred while processing the image.');
-                return;
+                const docmentAsBytes = await fs.promises.readFile(originalname);
+
+                let text;
+                if (originalname.endsWith('.pdf')) {
+
+                    const pdfDoc = await PDFDocument.load(docmentAsBytes);
+
+                    text = await getAllText(pdfDoc);
+                } else {
+                    text = await getTextFromBytes(docmentAsBytes);
+                }
+
+                let prompt = createDetailsPrompt(text, originalname);
+
+                let data = await makeCompletionsRequest(prompt, useGpt4);
+
+                await fs.unlink(originalname, function (err) { });
+
+                res.set('Access-Control-Allow-Origin', '*');
+                res.json(data);
+            } catch (error) {
+                console.error(error);
+                fs.unlink(originalname, function (err) { });
             }
-
-            console.log('Data: ' + document?.$response.data);
-            console.log('Error: ' + document?.$response.error);
-
-            if (document?.$response.error) {
-                res.status(500).send('An error occurred while processing the image: ' + document?.$response.error?.message);
-                return;
-            }
-
-            // Get the table rows
-            const tableText = extractTableRows(document);
-
-            // Get all text
-            const text = extractText(document);
-
-            console.log('Table Rows:', tableText);
-            console.log('Text:', text);
-
-            let prompt = createPrompt(text, tableText, originalname);
-            let data = await makeCompletionsRequest(prompt, useGpt4);
-
-            // Send the response with {'Access-Control-Allow-Origin': '*'} to allow CORS
-            res.set('Access-Control-Allow-Origin', '*');
-            res.json(data);
         }
     } catch (error) {
         console.error(error);
@@ -109,7 +112,7 @@ async function upload(req, res, next) {
     }
 }
 
-async function uploadPdf(req, res, next) {
+async function getCdtCodes(req, res, next) {
     try {
         const {
             fieldname,
@@ -129,78 +132,33 @@ async function uploadPdf(req, res, next) {
 
         if (typeof req.files[0] != 'undefined') {
 
-            await fs.writeFile(originalname, buffer, function (err) { })
+            try {
+                await fs.writeFile(originalname, buffer, function (err) { })
 
-            const docmentAsBytes = await fs.promises.readFile(originalname);
+                const docmentAsBytes = await fs.promises.readFile(originalname);
 
-            const pdfDoc = await PDFDocument.load(docmentAsBytes);
+                let tables;
+                if (originalname.endsWith('.pdf')) {
 
-            console.log('PDF Document:', pdfDoc);
+                    const pdfDoc = await PDFDocument.load(docmentAsBytes);
 
-            const numberOfPages = pdfDoc.getPages().length;
-
-            console.log('Number of Pages:', numberOfPages);
-
-            let allTables = new Map();
-            let allTableText = '';
-            let allText = '';
-
-            for (let i = 0; i < numberOfPages; i++) {
-
-                // Create a new "sub" document
-                const subDocument = await PDFDocument.create();
-                // copy the page at current index
-                const [copiedPage] = await subDocument.copyPages(pdfDoc, [i])
-                subDocument.addPage(copiedPage);
-                const pdfBytes = await subDocument.save()
-                const document = await extractTextFromImage(pdfBytes); // img.buffer
-
-                if (document == null) {
-                    await fs.unlink(originalname, function (err) { });
-                    res.status(500).send('An error occurred while processing the image.');
-                    return;
+                    tables = await getAllTables(pdfDoc);
+                } else {
+                    tables = await getTablesFromBytes(docmentAsBytes);
                 }
 
-                console.log('Data: ' + document?.$response.data);
-                console.log('Error: ' + document?.$response.error);
+                let prompt = createCodesPrompt(JSON.stringify([...tables]));
 
-                if (document?.$response.error) {
-                    await fs.unlink(originalname, function (err) { });
-                    res.status(500).send('An error occurred while processing the image: ' + document?.$response.error?.message);
-                    return;
-                }
+                let data = await makeCompletionsRequest(prompt, useGpt4);
 
-                // Get the table rows
-                const tableMap = extractTableRows(document);
+                await fs.unlink(originalname, function (err) { });
 
-                // Get all text
-                const text = extractText(document);
-
-                console.log('Table Map:', tableMap);
-                console.log('Text:', text);
-
-                // Merge the tables
-                allTables = new Map([...allTables, ...tableMap]);
-                allTableText += tableMap;
-
-                // If all text has not been set, set it
-                if (allText == '') {
-
-                    allText = text;
-                }
+                res.set('Access-Control-Allow-Origin', '*');
+                res.json(data);
+            } catch (error) {
+                console.error(error);
+                fs.unlink(originalname, function (err) { });
             }
-            // Extract text from the image
-            allTables = new Map([...allTables]);
-
-            console.log('All Tables:', JSON.stringify(Array.from([...allTables.values()]).flat()));
-
-            let prompt = createPrompt(allText, JSON.stringify([...allTables]), originalname);
-            let data = await makeCompletionsRequest(prompt, useGpt4);
-
-            await fs.unlink(originalname, function (err) { });
-            // Send the response with {'Access-Control-Allow-Origin': '*'} to allow CORS
-            res.set('Access-Control-Allow-Origin', '*');
-            res.json(data);
         }
     } catch (error) {
         console.error(error);
@@ -299,9 +257,116 @@ async function makeCompletionsRequest(prompt, useGpt4 = false) {
     }
 }
 
-// Function to create a prompt for extracting information from a treatment plan
-// This function takes in the full text and table of a treatment plan and creates a prompt
-function createPrompt(fullText, table, fileName) {
+/**
+ * Function to create a prompt for extracting just the CDT code information from a treatment plan:
+ * - CDT codes
+ * - Descriptions
+ * - Fees
+ * - Teeth
+ * - Dates
+ * - Visits
+ * This prompt does not include text outside of tables. Use GPT 4 for best results.
+ */
+function createCodesPrompt(tables) {
+    let template = `
+    Return the the 4-digit dental codes with descriptions and insurance fees in this text from a treatment plan:
+    
+    “{{ tables }}”
+    
+    Use this as a template:
+    
+    {
+    "cdt_codes": [
+    {
+    "code": "D1110",
+    "description": "Cleaning - adult",
+     "full_fee": "100.00",
+    "plan_fee": "80",
+    "date": "10/10/2021",
+    "visit": "1",
+    "tooth": "1"
+    },
+    {
+    "code": "D1206",
+    "description": "Topical fluoride varnish",
+    "full_fee": "100.00",
+    "plan_fee": "80",
+    "date": "10/10/2021",
+    "visit": "1",
+    "tooth": "2"
+    },
+    "code": "D1206",
+    "description": "Topical fluoride varnish",
+    "full_fee": "100.00",
+    "plan_fee": "80",
+    "date": "10/11/2021",
+    "visit": "2",
+    "tooth": "2"
+    },
+    {
+    "code": "D1351",
+    "description": "Sealant - per tooth",
+    "full_fee": "100.00",
+    "plan_fee": "80",
+    "date": "10/11/2021",
+    "visit": "2",
+    "tooth": ""
+    }
+    ]
+    }
+
+    Be concise.
+`.replace('{{ tables }}', tables);
+
+    return template;
+}
+
+/**
+ * Get the patient name and dental office from a treatment plan
+ * GPT 3.5 should be able to handle this
+ * @param {String} fullText Full text from the treatment plan excluding tables
+ * @param {*} fileName Name of the file that was uploaded
+ * @returns 
+ */
+function createDetailsPrompt(fullText, fileName) {
+    let template = `
+    Return the user name and dental office in this text from a treatment plan:
+
+    File Name:
+
+    “{{ fileName }}”
+
+    Full Text:
+    
+    “{{ text }}”
+    
+    
+    Use this as a template:
+    
+    {
+    "patient": "test name",
+    "dental_office": "test office",
+    }
+
+    Be concise.
+`.replace('{{ text }}', fullText).replace('{{ fileName }}', fileName);
+
+    return template;
+}
+
+/**
+ * Function to create a prompt for extracting all relevant information from a treatment plan
+ * - Patient name
+ * - Dental office
+ * - Service summary
+ * - CDT codes
+ * This function takes in the full text and table of a treatment plan and creates a prompt
+ * @param {*} fullText 
+ * @param {*} table 
+ * @param {*} fileName 
+ * @returns 
+ */
+function createFullPrompt(fullText, table, fileName) {
 
     let template = `
     Return the user name, dental office, and the 4-digit dental codes with descriptions and insurance fees in this text from a treatment plan:
@@ -373,7 +438,7 @@ function createPrompt(fullText, table, fileName) {
 module.exports = {
     getTestResponse,
     getTextractResults,
-    upload,
-    uploadPdf
+    getPlanDetails,
+    getCdtCodes
 };
 
