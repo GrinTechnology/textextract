@@ -248,9 +248,21 @@ async function makeCompletionsRequest(prompt, useGpt4 = false) {
         const firstMessageContent = data.choices[0].message.content;
         console.log(firstMessageContent);
 
+        let jsonOutput;
+        // get string between ``` and ```
+        // const regex = /```([^`]*)```/gm;
+        //const matches = regex.exec(firstMessageContent);
+        // console.log(matches);
+
+        // if(matches != undefined && matches?.length > 1) {
+        //    jsonOutput = matches[1];
+        //} else {
+        jsonOutput = firstMessageContent.substring(firstMessageContent.indexOf('{'), firstMessageContent.lastIndexOf('}') + 1);
+        //}
+
         // return data; // Returns the raw OpenAI response
         // Start at the first { and end at the last }
-        return JSON.parse(firstMessageContent.substring(firstMessageContent.indexOf('{'), firstMessageContent.lastIndexOf('}') + 1));
+        return JSON.parse(jsonOutput);
 
     } catch (error) {
         console.error(error);
@@ -269,7 +281,8 @@ async function makeCompletionsRequest(prompt, useGpt4 = false) {
  */
 function createCodesPrompt(tables) {
     let template = `
-    Return the the 4-digit dental codes with descriptions and insurance fees in this text from a treatment plan:
+    Return a JSON object with the 4-digit dental codes with descriptions and insurance fees in this text from a treatment plan. 
+    Some codes will apply to multiple teeth:
     
     “{{ tables }}”
     
@@ -284,7 +297,7 @@ function createCodesPrompt(tables) {
     "plan_fee": "80",
     "date": "10/10/2021",
     "visit": "1",
-    "tooth": "1"
+    "teeth": ["1"]
     },
     {
     "code": "D1206",
@@ -293,15 +306,7 @@ function createCodesPrompt(tables) {
     "plan_fee": "80",
     "date": "10/10/2021",
     "visit": "1",
-    "tooth": "2"
-    },
-    "code": "D1206",
-    "description": "Topical fluoride varnish",
-    "full_fee": "100.00",
-    "plan_fee": "80",
-    "date": "10/11/2021",
-    "visit": "2",
-    "tooth": "2"
+    "teeth": ["1","2"]
     },
     {
     "code": "D1351",
@@ -310,12 +315,12 @@ function createCodesPrompt(tables) {
     "plan_fee": "80",
     "date": "10/11/2021",
     "visit": "2",
-    "tooth": ""
+    "teeth": ["UR","UL"]
     }
     ]
     }
 
-    Be concise.
+    Do not remove duplicates. Be concise.
 `.replace('{{ tables }}', tables);
 
     return template;

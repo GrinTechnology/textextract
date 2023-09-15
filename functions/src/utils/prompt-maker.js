@@ -1,5 +1,5 @@
-import { PDFDocument } from 'pdf-lib';
-import { extractTableRows, extractText, extractTextFromImage } from './text-extract';
+const { PDFDocument } = require('pdf-lib');
+const { extractTableRows, extractText, extractTextFromImage } = require('./text-extract');
 
 /**
  * Get all the tables from a PDF file
@@ -132,7 +132,7 @@ async function getAllText(pdfDoc) {
     return allText;
 }
 
-export {
+module.exports = {
     getAllTables, 
     getAllText,
     getTablesFromBytes,

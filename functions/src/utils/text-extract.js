@@ -159,8 +159,25 @@ function extractTableRows(document) {
 
       }
 
+      if(rowValues.length < 5){
+        continue;
+      }
+
       // Convert the row values to a comma separated list
-      const row = rowValues.join(',');
+      let row = rowValues.join(',');
+
+      // If row only contains commas, skip it
+      if (row.replace(/,/g, '').trim() === '') {
+        continue;
+      }
+
+      row = row.toLowerCase();
+      row = row.replace(',t,', ',tooth,');
+      row = row.replace(',th,', ',tooth,');
+      row = row.replace(',tth,', ',tooth,');
+      row = row.replace(',surf,', ',tooth,');
+      row = row.replace(',surf.,', ',tooth,');
+      row = row.replace(',surface,', ',tooth,');
 
       // Add the row to the table rows map
       tableRows.push(row);
