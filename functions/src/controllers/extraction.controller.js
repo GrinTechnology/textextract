@@ -297,7 +297,8 @@ function createCodesPrompt(tables) {
     "plan_fee": "80",
     "date": "10/10/2021",
     "visit": "1",
-    "teeth": ["1DO"]
+    "teeth": ["1DO"],
+    "ids": ["1"]
     },
     {
     "code": "D1206",
@@ -306,7 +307,8 @@ function createCodesPrompt(tables) {
     "plan_fee": "80",
     "date": "10/10/2021",
     "visit": "1",
-    "teeth": ["1","2"]
+    "teeth": ["1","2"],
+    "ids": ["2","3"]
     },
     {
     "code": "D1351",
@@ -315,7 +317,8 @@ function createCodesPrompt(tables) {
     "plan_fee": "80",
     "date": "10/11/2021",
     "visit": "2",
-    "teeth": ["3UR","3UL"]
+    "teeth": ["3UR","3UL"],
+    "ids": ["4","5"]
     }
     ]
     }

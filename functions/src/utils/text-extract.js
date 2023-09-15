@@ -1,5 +1,6 @@
 // Import AWS SDK
 const AWS = require('../configs/aws-config');
+const { v4 } = require('uuid');
 
 // Create a new instance of Textract
 const textract = new AWS.Textract();
@@ -159,7 +160,7 @@ function extractTableRows(document) {
 
       }
 
-      if(rowValues.length < 5){
+      if (rowValues.length < 5) {
         continue;
       }
 
@@ -178,6 +179,14 @@ function extractTableRows(document) {
       row = row.replace(',surf,', ',tooth surface,');
       row = row.replace(',surf.,', ',tooth surface,');
       row = row.replace(',surface,', ',tooth surface,');
+
+      // add uuid to row
+
+      if (row.includes(',tooth,')){
+        row = row + ',id';
+      } else {
+        row = row + ',' + v4().substring(0, 8);
+      }
 
       // Add the row to the table rows map
       tableRows.push(row);
