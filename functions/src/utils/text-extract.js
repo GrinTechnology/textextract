@@ -175,9 +175,9 @@ function extractTableRows(document) {
       row = row.replace(',t,', ',tooth,');
       row = row.replace(',th,', ',tooth,');
       row = row.replace(',tth,', ',tooth,');
-      row = row.replace(',surf,', ',tooth,');
-      row = row.replace(',surf.,', ',tooth,');
-      row = row.replace(',surface,', ',tooth,');
+      row = row.replace(',surf,', ',tooth surface,');
+      row = row.replace(',surf.,', ',tooth surface,');
+      row = row.replace(',surface,', ',tooth surface,');
 
       // Add the row to the table rows map
       tableRows.push(row);

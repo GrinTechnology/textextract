@@ -282,7 +282,7 @@ async function makeCompletionsRequest(prompt, useGpt4 = false) {
 function createCodesPrompt(tables) {
     let template = `
     Return a JSON object with the 4-digit dental codes with descriptions and insurance fees in this text from a treatment plan. 
-    Some codes will apply to multiple teeth:
+    Some codes will apply to multiple teeth. Include teeth and surfaces if applicable.
     
     “{{ tables }}”
     
@@ -297,7 +297,7 @@ function createCodesPrompt(tables) {
     "plan_fee": "80",
     "date": "10/10/2021",
     "visit": "1",
-    "teeth": ["1"]
+    "teeth": ["1DO"]
     },
     {
     "code": "D1206",
@@ -315,7 +315,7 @@ function createCodesPrompt(tables) {
     "plan_fee": "80",
     "date": "10/11/2021",
     "visit": "2",
-    "teeth": ["UR","UL"]
+    "teeth": ["3UR","3UL"]
     }
     ]
     }
